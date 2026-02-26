@@ -9,6 +9,7 @@ type ButtonIconTextShrinkProps = {
   direction?: "left" | "right";
   frameWidthClass?: string;
   textWidthClass?: string;
+  textClassName?: string;
   className?: string;
   expandOnHover?: boolean;
   expandMode?: "all" | "icon";
@@ -23,6 +24,7 @@ type ButtonIconTextShrinkProps = {
   onMouseEnter?: MouseEventHandler<HTMLDivElement>;
   onMouseLeave?: MouseEventHandler<HTMLDivElement>;
   onMouseMove?: MouseEventHandler<HTMLDivElement>;
+  onClick?: () => void;
 };
 
 export default function ButtonIconTextShrink({
@@ -30,6 +32,7 @@ export default function ButtonIconTextShrink({
   direction = "left",
   frameWidthClass = "w-[150px]",
   textWidthClass = "w-[90px]",
+  textClassName = "",
   className = "",
   expandOnHover = false,
   expandMode = "all",
@@ -44,6 +47,7 @@ export default function ButtonIconTextShrink({
   onMouseEnter,
   onMouseLeave,
   onMouseMove,
+  onClick,
 }: ButtonIconTextShrinkProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLDivElement>(null);
@@ -144,10 +148,23 @@ export default function ButtonIconTextShrink({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseMove={onMouseMove}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
     >
       {direction === "left" && icon}
       <span
-        className={`h-[16px] ${textWidthClass} text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#1A1B1C] ${
+        className={`h-[16px] ${textWidthClass} text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#1A1B1C] ${textClassName} ${
           direction === "right" ? "text-right" : "text-left"
         }`}
       >

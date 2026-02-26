@@ -1,7 +1,11 @@
 import EnterCodeButton from "./EnterCodeButton";
 import Location from "./Location";
 
-export default function Header() {
+type HeaderProps = {
+  showEnterCodeButton?: boolean;
+};
+
+export default function Header({ showEnterCodeButton = true }: HeaderProps) {
   return (
     <header className="absolute left-0 top-0 w-full">
       <div className="relative h-[64px] w-full">
@@ -14,7 +18,7 @@ export default function Header() {
         </div>
 
         {/* Right button */}
-        <EnterCodeButton />
+        {showEnterCodeButton ? <EnterCodeButton /> : null}
       </div>
     </header>
   );
