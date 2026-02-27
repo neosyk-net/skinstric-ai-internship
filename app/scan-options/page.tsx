@@ -1,24 +1,107 @@
 "use client";
 
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { gsap } from "gsap";
 import Header from "../../components/header/Header";
 import ButtonIconTextShrink from "../../components/ButtonIconTextShrink";
+
+const PHASE_TWO_ENDPOINT =
+  "https://us-central1-frontend-simplified.cloudfunctions.net/skinstricPhaseTwo";
+const UPLOADING_HOLD_MS = 1250;
+
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== "string") {
+        reject(new Error("Failed to read file."));
+        return;
+      }
+
+      const base64Payload = result.split(",")[1] ?? "";
+      if (!base64Payload) {
+        reject(new Error("Invalid Base64 payload."));
+        return;
+      }
+
+      resolve(base64Payload);
+    };
+    reader.onerror = () => reject(new Error("Could not read selected file."));
+    reader.readAsDataURL(file);
+  });
 
 export default function ScanOptionsPage() {
   const router = useRouter();
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const uploadStatusRef = useRef<HTMLParagraphElement>(null);
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
+  const [uploadError, setUploadError] = useState("");
+
+  useEffect(() => {
+    if (!uploadStatus || uploadError || !uploadStatusRef.current) return;
+
+    const messageNode = uploadStatusRef.current;
+    const revealTween = gsap.fromTo(
+      messageNode,
+      { clipPath: "inset(0 100% 0 0)" },
+      { clipPath: "inset(0 0% 0 0)", duration: 1.9, ease: "power2.out" },
+    );
+    const routeTimer = window.setTimeout(() => {
+      router.push("/loading");
+    }, 2600);
+
+    return () => {
+      revealTween.kill();
+      window.clearTimeout(routeTimer);
+    };
+  }, [uploadStatus, uploadError, router]);
 
   const openGalleryPicker = () => {
     galleryInputRef.current?.click();
   };
 
-  const handleGalleryChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
     setSelectedFileName(file.name);
+    setUploadStatus("");
+    setUploadError("");
+    setIsUploading(true);
+
+    try {
+      const base64Image = await fileToBase64(file);
+      const response = await fetch(PHASE_TWO_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: base64Image,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload request failed.");
+      }
+
+      const payload = await response.json();
+      localStorage.setItem("skinstric_uploaded_file_name", file.name);
+      localStorage.setItem("skinstric_phase_two_response", JSON.stringify(payload));
+      await new Promise((resolve) => setTimeout(resolve, UPLOADING_HOLD_MS));
+      setIsUploading(false);
+      setUploadStatus("IMAGE UPLOADED SUCCESSFULLY.");
+    } catch {
+      setUploadError("Could not upload image right now. Please try again.");
+      setIsUploading(false);
+    } finally {
+      // noop: upload state is handled explicitly in success/error branches.
+    }
   };
 
   return (
@@ -133,6 +216,25 @@ export default function ScanOptionsPage() {
       {selectedFileName ? (
         <p className="absolute left-1/2 top-[730px] -translate-x-1/2 text-[12px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70">
           SELECTED: {selectedFileName}
+        </p>
+      ) : null}
+      {isUploading ? (
+        <p className="absolute left-1/2 top-[752px] -translate-x-1/2 text-[12px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70">
+          UPLOADING...
+        </p>
+      ) : null}
+      {uploadStatus ? (
+        <p
+          ref={uploadStatusRef}
+          className="absolute left-1/2 top-[752px] -translate-x-1/2 whitespace-nowrap text-[12px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70"
+          style={{ clipPath: "inset(0 100% 0 0)" }}
+        >
+          {uploadStatus}
+        </p>
+      ) : null}
+      {uploadError ? (
+        <p className="absolute left-1/2 top-[752px] -translate-x-1/2 text-[12px] uppercase tracking-[0.02em] text-[#B23A3A]">
+          {uploadError}
         </p>
       ) : null}
 

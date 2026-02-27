@@ -4,3 +4,25 @@ html,
 body {
   height: 100%;
 }
+
+.rhombus-ring {
+  left: 50%;
+  top: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(var(--ring-hidden-scale, 0.94));
+  transition:
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 140ms linear;
+  will-change: transform;
+}
+
+.analysis-cluster:hover .rhombus-ring,
+.analysis-cluster:focus-within .rhombus-ring {
+  opacity: var(--ring-opacity, 1);
+  transform: translate(-50%, -50%) scale(var(--ring-show-scale, 1));
+  transition-delay: var(--ring-delay, 0ms), var(--ring-delay, 0ms);
+}
+
+.analysis-cluster:not(:hover):not(:focus-within) .rhombus-ring {
+  transition-delay: 0ms, 220ms;
+}

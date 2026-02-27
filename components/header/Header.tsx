@@ -3,9 +3,10 @@ import Location from "./Location";
 
 type HeaderProps = {
   showEnterCodeButton?: boolean;
+  locationLabel?: string;
 };
 
-export default function Header({ showEnterCodeButton = true }: HeaderProps) {
+export default function Header({ showEnterCodeButton = true, locationLabel = "INTRO" }: HeaderProps) {
   return (
     <header className="absolute left-0 top-0 w-full">
       <div className="relative h-[64px] w-full">
@@ -14,7 +15,7 @@ export default function Header({ showEnterCodeButton = true }: HeaderProps) {
           <span className="inline-block h-[16px] w-[69px] font-semibold tracking-[-0.02em]">
             SKINSTRIC
           </span>
-          <Location />
+          <Location label={locationLabel} />
         </div>
 
         {/* Right button */}
