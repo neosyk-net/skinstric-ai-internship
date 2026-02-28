@@ -25,6 +25,7 @@ type ButtonIconTextShrinkProps = {
   onMouseLeave?: MouseEventHandler<HTMLDivElement>;
   onMouseMove?: MouseEventHandler<HTMLDivElement>;
   onClick?: () => void;
+  iconColor?: string;
 };
 
 export default function ButtonIconTextShrink({
@@ -48,6 +49,7 @@ export default function ButtonIconTextShrink({
   onMouseLeave,
   onMouseMove,
   onClick,
+  iconColor = "#1A1B1C",
 }: ButtonIconTextShrinkProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLDivElement>(null);
@@ -119,7 +121,7 @@ export default function ButtonIconTextShrink({
       style={{ transformOrigin: direction === "right" ? "left center" : "right center" }}
     >
       <svg className="h-full w-full" viewBox="0 0 44 44" fill="none" aria-hidden="true">
-        <path d="M22 1L43 22L22 43L1 22L22 1Z" stroke="#1A1B1C" />
+        <path d="M22 1L43 22L22 43L1 22L22 1Z" stroke={iconColor} />
       </svg>
       <svg
         width="9.43"
@@ -131,7 +133,7 @@ export default function ButtonIconTextShrink({
         fill="none"
         aria-hidden="true"
       >
-        <path d="M9.43 0L0 5.445L9.43 10.89V0Z" fill="#1A1B1C" />
+        <path d="M9.43 0L0 5.445L9.43 10.89V0Z" fill={iconColor} />
       </svg>
     </div>
   );

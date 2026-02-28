@@ -62,7 +62,7 @@ export default function StartAnalysisPage() {
     if (!dots.length) return;
 
     const timeline = gsap.timeline({
-      repeat: SUBMITTING_ANIMATION_CYCLES - 1,
+      repeat: -1,
       repeatDelay: SUBMITTING_REPEAT_DELAY_SECONDS,
       defaults: { overwrite: "auto" },
     });

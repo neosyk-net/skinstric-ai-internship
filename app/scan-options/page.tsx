@@ -49,10 +49,12 @@ export default function ScanOptionsPage() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const uploadStatusRef = useRef<HTMLParagraphElement>(null);
   const uploadingDotRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const cameraPermissionPanelRef = useRef<HTMLDivElement>(null);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [uploadError, setUploadError] = useState("");
+  const [showCameraPermissionPanel, setShowCameraPermissionPanel] = useState(false);
   const openGalleryPicker = useCallback(() => {
     galleryInputRef.current?.click();
   }, []);
@@ -118,6 +120,22 @@ export default function ScanOptionsPage() {
       timeline.kill();
     };
   }, [isUploading]);
+
+  useEffect(() => {
+    if (!showCameraPermissionPanel) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (cameraPermissionPanelRef.current?.contains(target)) return;
+      setShowCameraPermissionPanel(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [showCameraPermissionPanel]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -210,17 +228,56 @@ export default function ScanOptionsPage() {
         TO START ANALYSIS
       </p>
 
-      <button className="absolute left-[412px] top-[413px] h-[136px] w-[136px] cursor-pointer">
+      <button
+        type="button"
+        className="absolute left-[412px] top-[413px] h-[136px] w-[136px] cursor-pointer"
+        onClick={() => setShowCameraPermissionPanel(true)}
+      >
         <Image src="/assets/figma/camera.svg" alt="Allow A.I. to scan your face" fill className="object-contain" />
       </button>
       <button
-        className="absolute left-[1372px] top-[413px] h-[136px] w-[136px] cursor-pointer"
-        onClick={openGalleryPicker}
+        type="button"
+        className={`absolute left-[1372px] top-[413px] h-[136px] w-[136px] transition-opacity duration-300 ${
+          showCameraPermissionPanel ? "cursor-not-allowed opacity-25" : "cursor-pointer opacity-100"
+        }`}
+        onClick={showCameraPermissionPanel ? undefined : openGalleryPicker}
       >
         <Image src="/assets/figma/gallery.svg" alt="Allow A.I. access gallery" fill className="object-contain" />
       </button>
+      {showCameraPermissionPanel ? (
+        <div
+          ref={cameraPermissionPanelRef}
+          className="absolute left-[592px] top-[442px] z-20 h-[136px] w-[352px] bg-[#1A1B1C]"
+        >
+          <p className="absolute left-[15px] top-[14px] h-6 w-[321px] whitespace-nowrap text-[16px] font-semibold uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
+            ALLOW A.I. TO ACCESS YOUR CAMERA
+          </p>
+          <div className="absolute left-0 top-[100px] h-px w-full bg-[#FCFCFC]" />
+          <div className="absolute left-[168px] top-[101px] inline-flex h-[35px] items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex h-[35px] w-20 cursor-pointer items-center justify-center px-4 pb-[10px] pt-[9px] text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#FCFCFC] transition-colors duration-200 hover:text-[#C1C2C3] focus-visible:text-[#C1C2C3]"
+              onClick={() => setShowCameraPermissionPanel(false)}
+            >
+              DENY
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-[35px] w-20 cursor-pointer items-center justify-center px-4 pb-[10px] pt-[9px] text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#FCFCFC] transition-colors duration-200 hover:text-[#C1C2C3] focus-visible:text-[#C1C2C3]"
+              onClick={() => {
+                setShowCameraPermissionPanel(false);
+                router.push("/camera");
+              }}
+            >
+              ALLOW
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div className="pointer-events-none absolute left-0 top-0">
-        <div className="absolute left-[239px] top-[240px] h-[482px] w-[482px] animate-[spin_42s_linear_infinite]">
+        <div
+          className="absolute left-[239px] top-[240px] h-[482px] w-[482px] animate-[spin_42s_linear_infinite]"
+        >
           <Image
             src="/assets/figma/rombus-outer.svg"
             alt=""
@@ -246,8 +303,14 @@ export default function ScanOptionsPage() {
           <Image src="/assets/figma/rombus-inner.svg" alt="" fill className="object-contain [filter:brightness(0.62)]" />
         </div>
       </div>
-      <div className="pointer-events-none absolute left-0 top-0 [transform:matrix(-1,0,0,1,1920,0)]">
-        <div className="absolute left-[239px] top-[240px] h-[482px] w-[482px] animate-[spin_42s_linear_infinite]">
+      <div
+        className={`pointer-events-none absolute left-0 top-0 [transform:matrix(-1,0,0,1,1920,0)] transition-opacity duration-300 ${
+          showCameraPermissionPanel ? "opacity-20" : "opacity-100"
+        }`}
+      >
+        <div
+          className="absolute left-[239px] top-[240px] h-[482px] w-[482px] animate-[spin_42s_linear_infinite]"
+        >
           <Image
             src="/assets/figma/rombus-outer.svg"
             alt=""
@@ -277,12 +340,15 @@ export default function ScanOptionsPage() {
         <Image src="/assets/figma/camera-connector.svg" alt="" fill className="object-contain" />
       </div>
       <div
-        className="absolute cursor-pointer"
+        className={`absolute transition-opacity duration-300 ${
+          showCameraPermissionPanel ? "cursor-not-allowed opacity-25" : "cursor-pointer opacity-100"
+        }`}
         style={{ left: "1336.67px", top: "521px", width: "66.33px", height: "59.37px" }}
-        onClick={openGalleryPicker}
+        onClick={showCameraPermissionPanel ? undefined : openGalleryPicker}
         role="button"
         tabIndex={0}
         onKeyDown={(event) => {
+          if (showCameraPermissionPanel) return;
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             openGalleryPicker();
@@ -297,8 +363,10 @@ export default function ScanOptionsPage() {
         TO SCAN YOUR FACE
       </p>
       <p
-        className="absolute left-[1193px] top-[566px] h-12 w-[136px] cursor-pointer text-right text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#1A1B1C]"
-        onClick={openGalleryPicker}
+        className={`absolute left-[1193px] top-[566px] h-12 w-[136px] text-right text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#1A1B1C] transition-opacity duration-300 ${
+          showCameraPermissionPanel ? "cursor-not-allowed opacity-25" : "cursor-pointer opacity-100"
+        }`}
+        onClick={showCameraPermissionPanel ? undefined : openGalleryPicker}
       >
         ALLOW A.I.
         <br />

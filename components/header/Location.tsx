@@ -1,10 +1,11 @@
 type LocationProps = {
   label?: string;
+  className?: string;
 };
 
-export default function Location({ label = "INTRO" }: LocationProps) {
+export default function Location({ label = "INTRO", className = "" }: LocationProps) {
   return (
-    <div className="ml-4 inline-flex h-[17px] items-center gap-[6px] text-[#1A1B1C] opacity-60">
+    <div className={`ml-4 inline-flex h-[17px] items-center gap-[6px] ${className}`}>
       {/* Left bracket */}
       <span className="inline-block h-[17px] w-[4px] rounded-l-[2px] border border-r-0 border-current" />
 
