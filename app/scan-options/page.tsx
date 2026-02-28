@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
@@ -9,7 +9,18 @@ import ButtonIconTextShrink from "../../components/ButtonIconTextShrink";
 
 const PHASE_TWO_ENDPOINT =
   "https://us-central1-frontend-simplified.cloudfunctions.net/skinstricPhaseTwo";
-const UPLOADING_HOLD_MS = 1250;
+const UPLOADING_DOT_STAGGER_SECONDS = 0.16;
+const UPLOADING_DOT_MOVE_SECONDS = 0.16;
+const UPLOADING_REPEAT_DELAY_SECONDS = 0.24;
+const UPLOADING_DOT_COUNT = 3;
+const UPLOADING_ANIMATION_CYCLES = 3;
+const UPLOADING_CYCLE_SECONDS =
+  (UPLOADING_DOT_COUNT - 1) * UPLOADING_DOT_STAGGER_SECONDS + UPLOADING_DOT_MOVE_SECONDS * 2;
+const UPLOADING_MIN_LOADING_MS = Math.ceil(
+  (UPLOADING_CYCLE_SECONDS * UPLOADING_ANIMATION_CYCLES +
+    UPLOADING_REPEAT_DELAY_SECONDS * (UPLOADING_ANIMATION_CYCLES - 1)) *
+    1000,
+);
 
 const fileToBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -37,10 +48,14 @@ export default function ScanOptionsPage() {
   const router = useRouter();
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const uploadStatusRef = useRef<HTMLParagraphElement>(null);
+  const uploadingDotRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [uploadError, setUploadError] = useState("");
+  const openGalleryPicker = useCallback(() => {
+    galleryInputRef.current?.click();
+  }, []);
 
   useEffect(() => {
     if (!uploadStatus || uploadError || !uploadStatusRef.current) return;
@@ -61,9 +76,80 @@ export default function ScanOptionsPage() {
     };
   }, [uploadStatus, uploadError, router]);
 
-  const openGalleryPicker = () => {
-    galleryInputRef.current?.click();
-  };
+  useEffect(() => {
+    if (!isUploading) return;
+
+    const dots = uploadingDotRefs.current.filter((dot): dot is HTMLSpanElement => Boolean(dot));
+    if (!dots.length) return;
+
+    const timeline = gsap.timeline({
+      repeat: -1,
+      repeatDelay: UPLOADING_REPEAT_DELAY_SECONDS,
+      defaults: { overwrite: "auto" },
+    });
+
+    gsap.set(dots, { y: 0, opacity: 0.46 });
+    dots.forEach((dot, index) => {
+      const startAt = index * UPLOADING_DOT_STAGGER_SECONDS;
+      timeline
+        .to(
+          dot,
+          {
+            y: -4,
+            opacity: 1,
+            duration: UPLOADING_DOT_MOVE_SECONDS,
+            ease: "power2.out",
+          },
+          startAt,
+        )
+        .to(
+          dot,
+          {
+            y: 0,
+            opacity: 0.46,
+            duration: UPLOADING_DOT_MOVE_SECONDS,
+            ease: "power2.in",
+          },
+          startAt + UPLOADING_DOT_MOVE_SECONDS,
+        );
+    });
+
+    return () => {
+      timeline.kill();
+    };
+  }, [isUploading]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.repeat || isUploading) return;
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT")
+      ) {
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        openGalleryPicker();
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isUploading, openGalleryPicker]);
 
   const handleGalleryChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,6 +159,7 @@ export default function ScanOptionsPage() {
     setUploadStatus("");
     setUploadError("");
     setIsUploading(true);
+    const uploadStartedAt = Date.now();
 
     try {
       const base64Image = await fileToBase64(file);
@@ -93,7 +180,11 @@ export default function ScanOptionsPage() {
       const payload = await response.json();
       localStorage.setItem("skinstric_uploaded_file_name", file.name);
       localStorage.setItem("skinstric_phase_two_response", JSON.stringify(payload));
-      await new Promise((resolve) => setTimeout(resolve, UPLOADING_HOLD_MS));
+      const elapsedMs = Date.now() - uploadStartedAt;
+      const remainingMs = Math.max(0, UPLOADING_MIN_LOADING_MS - elapsedMs);
+      if (remainingMs) {
+        await new Promise((resolve) => setTimeout(resolve, remainingMs));
+      }
       setIsUploading(false);
       setUploadStatus("IMAGE UPLOADED SUCCESSFULLY.");
     } catch {
@@ -220,7 +311,12 @@ export default function ScanOptionsPage() {
       ) : null}
       {isUploading ? (
         <p className="absolute left-1/2 top-[752px] -translate-x-1/2 text-[12px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70">
-          UPLOADING...
+          UPLOADING{" "}
+          <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
+            <span ref={(node) => (uploadingDotRefs.current[0] = node)}>.</span>
+            <span ref={(node) => (uploadingDotRefs.current[1] = node)}>.</span>
+            <span ref={(node) => (uploadingDotRefs.current[2] = node)}>.</span>
+          </span>
         </p>
       ) : null}
       {uploadStatus ? (

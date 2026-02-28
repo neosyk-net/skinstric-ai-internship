@@ -17,12 +17,13 @@ body {
 }
 
 .analysis-cluster:hover .rhombus-ring,
-.analysis-cluster:focus-within .rhombus-ring {
+.analysis-cluster:focus-within .rhombus-ring,
+.analysis-cluster.analysis-cluster--active .rhombus-ring {
   opacity: var(--ring-opacity, 1);
   transform: translate(-50%, -50%) scale(var(--ring-show-scale, 1));
   transition-delay: var(--ring-delay, 0ms), var(--ring-delay, 0ms);
 }
 
-.analysis-cluster:not(:hover):not(:focus-within) .rhombus-ring {
+.analysis-cluster:not(:hover):not(:focus-within):not(.analysis-cluster--active) .rhombus-ring {
   transition-delay: 0ms, 220ms;
 }

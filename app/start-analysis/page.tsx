@@ -11,7 +11,18 @@ const API_ENDPOINT =
   "https://us-central1-frontend-simplified.cloudfunctions.net/skinstricPhaseOne";
 const NAME_FIELD_WIDTH = 420;
 const LOCATION_FIELD_WIDTH = 500;
-const MIN_SUBMITTING_MS = 1400;
+const SUBMITTING_DOT_STAGGER_SECONDS = 0.16;
+const SUBMITTING_DOT_MOVE_SECONDS = 0.16;
+const SUBMITTING_REPEAT_DELAY_SECONDS = 0.24;
+const SUBMITTING_DOT_COUNT = 3;
+const SUBMITTING_ANIMATION_CYCLES = 2;
+const SUBMITTING_CYCLE_SECONDS =
+  (SUBMITTING_DOT_COUNT - 1) * SUBMITTING_DOT_STAGGER_SECONDS + SUBMITTING_DOT_MOVE_SECONDS * 2;
+const MIN_SUBMITTING_MS = Math.ceil(
+  (SUBMITTING_CYCLE_SECONDS * SUBMITTING_ANIMATION_CYCLES +
+    SUBMITTING_REPEAT_DELAY_SECONDS * (SUBMITTING_ANIMATION_CYCLES - 1)) *
+    1000,
+);
 
 const isValidTextValue = (value: string) => {
   const trimmed = value.trim();
@@ -29,6 +40,7 @@ export default function StartAnalysisPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const proceedRef = useRef<HTMLDivElement>(null);
+  const submittingDotRefs = useRef<Array<HTMLSpanElement | null>>([]);
 
   const placeholderText = step === "name" ? "Introduce Yourself" : "Where are you from?";
   const fieldWidth = step === "name" ? NAME_FIELD_WIDTH : LOCATION_FIELD_WIDTH;
@@ -42,6 +54,49 @@ export default function StartAnalysisPage() {
       { x: 0, autoAlpha: 1, duration: 0.45, ease: "power3.out", overwrite: "auto" },
     );
   }, [isSubmitted]);
+
+  useEffect(() => {
+    if (!isSubmitting) return;
+
+    const dots = submittingDotRefs.current.filter((dot): dot is HTMLSpanElement => Boolean(dot));
+    if (!dots.length) return;
+
+    const timeline = gsap.timeline({
+      repeat: SUBMITTING_ANIMATION_CYCLES - 1,
+      repeatDelay: SUBMITTING_REPEAT_DELAY_SECONDS,
+      defaults: { overwrite: "auto" },
+    });
+
+    gsap.set(dots, { y: 0, opacity: 0.46 });
+    dots.forEach((dot, index) => {
+      const startAt = index * SUBMITTING_DOT_STAGGER_SECONDS;
+      timeline
+        .to(
+          dot,
+          {
+            y: -4,
+            opacity: 1,
+            duration: SUBMITTING_DOT_MOVE_SECONDS,
+            ease: "power2.out",
+          },
+          startAt,
+        )
+        .to(
+          dot,
+          {
+            y: 0,
+            opacity: 0.46,
+            duration: SUBMITTING_DOT_MOVE_SECONDS,
+            ease: "power2.in",
+          },
+          startAt + SUBMITTING_DOT_MOVE_SECONDS,
+        );
+    });
+
+    return () => {
+      timeline.kill();
+    };
+  }, [isSubmitting]);
 
   const handleProceed = async () => {
     if (isSubmitted) {
@@ -194,6 +249,9 @@ export default function StartAnalysisPage() {
           id="name"
           name="name"
           type="text"
+          spellCheck={false}
+          autoCorrect="off"
+          autoCapitalize="none"
           placeholder={placeholderText}
           value={inputValue}
           onChange={(event) => {
@@ -221,7 +279,12 @@ export default function StartAnalysisPage() {
       ) : null}
       {isSubmitting ? (
         <p className="absolute left-1/2 top-[530px] -translate-x-1/2 text-[12px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70">
-          SUBMITTING...
+          SUBMITTING{" "}
+          <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
+            <span ref={(node) => (submittingDotRefs.current[0] = node)}>.</span>
+            <span ref={(node) => (submittingDotRefs.current[1] = node)}>.</span>
+            <span ref={(node) => (submittingDotRefs.current[2] = node)}>.</span>
+          </span>
         </p>
       ) : null}
 

@@ -1,5 +1,8 @@
+"use client";
+
 import EnterCodeButton from "./EnterCodeButton";
 import Location from "./Location";
+import { usePathname, useRouter } from "next/navigation";
 
 type HeaderProps = {
   showEnterCodeButton?: boolean;
@@ -7,16 +10,30 @@ type HeaderProps = {
 };
 
 export default function Header({ showEnterCodeButton = true, locationLabel = "INTRO" }: HeaderProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const canNavigateHome = pathname !== "/";
+
   return (
     <header className="absolute left-0 top-0 w-full">
       <div className="relative h-[64px] w-full">
         {/* Left group: SKINSTRIC + [ INTRO ] */}
-        <div className="absolute left-8 top-[23px] flex h-[17px] items-center text-[14px] uppercase leading-[16px] text-[#1A1B1C]">
+        <button
+          type="button"
+          className={`absolute left-8 top-[23px] flex h-[17px] items-center text-[14px] uppercase leading-[16px] text-[#1A1B1C] ${
+            canNavigateHome ? "cursor-pointer" : "cursor-default"
+          }`}
+          onClick={() => {
+            if (!canNavigateHome) return;
+            router.push("/");
+          }}
+          aria-label="Go to landing page"
+        >
           <span className="inline-block h-[16px] w-[69px] font-semibold tracking-[-0.02em]">
             SKINSTRIC
           </span>
           <Location label={locationLabel} />
-        </div>
+        </button>
 
         {/* Right button */}
         {showEnterCodeButton ? <EnterCodeButton /> : null}
