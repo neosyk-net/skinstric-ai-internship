@@ -18,12 +18,11 @@ export default function Header({ showEnterCodeButton = true, locationLabel = "IN
   const locationColorClass = color === "light" ? "text-[#FCFCFC]" : "text-[#1A1B1C] opacity-60";
 
   return (
-    <header className="absolute left-0 top-0 w-full">
-      <div className="relative h-[64px] w-full">
-        {/* Left group: SKINSTRIC + [ INTRO ] */}
+    <header className="absolute left-0 top-0 z-20 w-full">
+      <nav className="box-border flex h-16 w-full items-center justify-between px-8 py-3" aria-label="Primary">
         <button
           type="button"
-          className={`absolute left-8 top-[23px] flex h-[17px] items-center text-[14px] uppercase leading-[16px] ${titleColorClass} ${
+          className={`m-0 inline-flex h-[17px] appearance-none items-center border-0 bg-transparent p-0 text-left text-[14px] uppercase leading-[16px] ${titleColorClass} ${
             canNavigateHome ? "cursor-pointer" : "cursor-default"
           }`}
           onClick={() => {
@@ -32,15 +31,12 @@ export default function Header({ showEnterCodeButton = true, locationLabel = "IN
           }}
           aria-label="Go to landing page"
         >
-          <span className="inline-block h-[16px] w-[69px] font-semibold tracking-[-0.02em]">
-            SKINSTRIC
-          </span>
+          <span className="inline-block h-[16px] w-[69px] font-semibold tracking-[-0.02em]">SKINSTRIC</span>
           <Location label={locationLabel} className={locationColorClass} />
         </button>
 
-        {/* Right button */}
         {showEnterCodeButton ? <EnterCodeButton /> : null}
-      </div>
+      </nav>
     </header>
   );
 }
