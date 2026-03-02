@@ -18,6 +18,7 @@ const dataUrlToBase64 = (dataUrl: string) => dataUrl.split(",")[1] ?? "";
 
 export default function CameraPage() {
   const router = useRouter();
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const captureCanvasRef = useRef<HTMLCanvasElement>(null);
   const proceedButtonRef = useRef<HTMLDivElement>(null);
@@ -29,6 +30,29 @@ export default function CameraPage() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [hasApprovedPhoto, setHasApprovedPhoto] = useState(false);
   const [isProceeding, setIsProceeding] = useState(false);
+  const isMobile = viewportWidth !== null && viewportWidth < 768;
+
+  const getViewportWidth = () => {
+    const candidates = [
+      window.innerWidth,
+      document.documentElement.clientWidth,
+      window.visualViewport?.width ?? Number.POSITIVE_INFINITY,
+    ].filter((value) => Number.isFinite(value) && value > 0);
+
+    return Math.min(...candidates);
+  };
+
+  useEffect(() => {
+    const syncViewport = () => setViewportWidth(getViewportWidth());
+    syncViewport();
+
+    window.addEventListener("resize", syncViewport);
+    window.visualViewport?.addEventListener("resize", syncViewport);
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+      window.visualViewport?.removeEventListener("resize", syncViewport);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -239,13 +263,20 @@ export default function CameraPage() {
 
       {!capturedPhotoDataUrl ? (
         <>
-          <p className="absolute left-[1719px] top-[472px] z-10 h-4 w-[91px] whitespace-nowrap text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#FCFCFC] opacity-70">
-            TAKE PICTURE
-          </p>
+          {!isMobile ? (
+            <p className="absolute left-[1719px] top-[472px] z-10 h-4 w-[91px] whitespace-nowrap text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#FCFCFC] opacity-70">
+              TAKE PICTURE
+            </p>
+          ) : null}
           <button
             type="button"
             aria-label="Take picture"
-            className="absolute left-[1826px] top-[449px] z-10 inline-flex h-[62px] w-[62px] items-center justify-center transition-transform duration-200 ease-out hover:scale-105"
+            className="absolute z-10 inline-flex h-[62px] w-[62px] items-center justify-center transition-transform duration-200 ease-out hover:scale-105"
+            style={
+              isMobile
+                ? { right: "24px", top: "52%", transform: "translateY(-50%)" }
+                : { left: "1826px", top: "449px" }
+            }
             onClick={handleCapture}
           >
             <Image src="/assets/figma/camera-click.svg" alt="" fill className="object-contain" />
@@ -266,29 +297,33 @@ export default function CameraPage() {
 
       {!isPreviewMode ? (
         <>
-          <p className="absolute left-1/2 top-[824px] z-10 w-[297px] -translate-x-1/2 whitespace-nowrap text-center text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
-            TO GET BETTER RESULTS MAKE SURE TO HAVE
-          </p>
-          <div className="absolute left-[688px] top-[864px] z-10 inline-flex h-6 w-[492px] items-center gap-8">
-            <div className="inline-flex h-6 items-center gap-[5px]">
-              <span className="inline-block h-[7px] w-[7px] rotate-45 border border-[#FCFCFC]" aria-hidden="true" />
-              <span className="whitespace-nowrap text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
-                NEUTRAL EXPRESSION
-              </span>
-            </div>
-            <div className="inline-flex h-6 items-center gap-[5px]">
-              <span className="inline-block h-[7px] w-[7px] rotate-45 border border-[#FCFCFC]" aria-hidden="true" />
-              <span className="whitespace-nowrap text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
-                FRONTAL POSE
-              </span>
-            </div>
-            <div className="inline-flex h-6 items-center gap-[5px]">
-              <span className="inline-block h-[7px] w-[7px] rotate-45 border border-[#FCFCFC]" aria-hidden="true" />
-              <span className="whitespace-nowrap text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
-                ADEQUATE LIGHTING
-              </span>
-            </div>
-          </div>
+          {!isMobile ? (
+            <>
+              <p className="absolute left-1/2 top-[824px] z-10 w-[297px] -translate-x-1/2 whitespace-nowrap text-center text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
+                TO GET BETTER RESULTS MAKE SURE TO HAVE
+              </p>
+              <div className="absolute left-[688px] top-[864px] z-10 inline-flex h-6 w-[492px] items-center gap-8">
+                <div className="inline-flex h-6 items-center gap-[5px]">
+                  <span className="inline-block h-[7px] w-[7px] rotate-45 border border-[#FCFCFC]" aria-hidden="true" />
+                  <span className="whitespace-nowrap text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
+                    NEUTRAL EXPRESSION
+                  </span>
+                </div>
+                <div className="inline-flex h-6 items-center gap-[5px]">
+                  <span className="inline-block h-[7px] w-[7px] rotate-45 border border-[#FCFCFC]" aria-hidden="true" />
+                  <span className="whitespace-nowrap text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
+                    FRONTAL POSE
+                  </span>
+                </div>
+                <div className="inline-flex h-6 items-center gap-[5px]">
+                  <span className="inline-block h-[7px] w-[7px] rotate-45 border border-[#FCFCFC]" aria-hidden="true" />
+                  <span className="whitespace-nowrap text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
+                    ADEQUATE LIGHTING
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : null}
         </>
       ) : null}
       {isPreviewMode ? (
@@ -383,7 +418,18 @@ export default function CameraPage() {
               </div>
             </div>
           </div>
-          <p className="absolute left-[846px] top-[514px] h-6 w-[227px] text-center text-[16px] font-semibold uppercase leading-[24px] tracking-[-0.02em] text-[#1A1B1C]">
+          <p
+            className="absolute h-6 w-[227px] text-center text-[14px] font-semibold uppercase leading-[24px] tracking-[-0.02em] text-[#1A1B1C] md:hidden"
+            style={{ left: "50%", top: "57%", transform: "translateX(-50%)" }}
+          >
+            SETTING UP CAMERA{" "}
+            <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
+              <span ref={(node) => (setupDotRefs.current[0] = node)}>.</span>
+              <span ref={(node) => (setupDotRefs.current[1] = node)}>.</span>
+              <span ref={(node) => (setupDotRefs.current[2] = node)}>.</span>
+            </span>
+          </p>
+          <p className="absolute left-[846px] top-[514px] hidden h-6 w-[227px] text-center text-[16px] font-semibold uppercase leading-[24px] tracking-[-0.02em] text-[#1A1B1C] md:block">
             SETTING UP CAMERA{" "}
             <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
               <span ref={(node) => (setupDotRefs.current[0] = node)}>.</span>

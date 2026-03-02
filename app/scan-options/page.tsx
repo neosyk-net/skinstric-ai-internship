@@ -21,6 +21,7 @@ const UPLOADING_MIN_LOADING_MS = Math.ceil(
     UPLOADING_REPEAT_DELAY_SECONDS * (UPLOADING_ANIMATION_CYCLES - 1)) *
     1000,
 );
+const MOBILE_ACTION_BOTTOM_PX = 112;
 
 const fileToBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -46,6 +47,7 @@ const fileToBase64 = (file: File) =>
 
 export default function ScanOptionsPage() {
   const router = useRouter();
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const uploadStatusRef = useRef<HTMLParagraphElement>(null);
   const uploadingDotRefs = useRef<Array<HTMLSpanElement | null>>([]);
@@ -55,6 +57,29 @@ export default function ScanOptionsPage() {
   const [uploadStatus, setUploadStatus] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [showCameraPermissionPanel, setShowCameraPermissionPanel] = useState(false);
+  const isMobile = viewportWidth !== null && viewportWidth < 768;
+
+  const getViewportWidth = () => {
+    const candidates = [
+      window.innerWidth,
+      document.documentElement.clientWidth,
+      window.visualViewport?.width ?? Number.POSITIVE_INFINITY,
+    ].filter((value) => Number.isFinite(value) && value > 0);
+
+    return Math.min(...candidates);
+  };
+
+  useEffect(() => {
+    const syncViewport = () => setViewportWidth(getViewportWidth());
+    syncViewport();
+
+    window.addEventListener("resize", syncViewport);
+    window.visualViewport?.addEventListener("resize", syncViewport);
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+      window.visualViewport?.removeEventListener("resize", syncViewport);
+    };
+  }, []);
   const openGalleryPicker = useCallback(() => {
     galleryInputRef.current?.click();
   }, []);
@@ -212,6 +237,183 @@ export default function ScanOptionsPage() {
       // noop: upload state is handled explicitly in success/error branches.
     }
   };
+
+  if (viewportWidth === null) {
+    return (
+      <section className="relative h-[100dvh] w-full overflow-hidden bg-[#FCFCFC]">
+        <Header showEnterCodeButton={false} />
+      </section>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <section className="relative h-[100dvh] w-full overflow-hidden bg-[#FCFCFC]">
+        <Header showEnterCodeButton={false} />
+        <input
+          ref={galleryInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleGalleryChange}
+        />
+
+        <p className="absolute left-8 top-[86px] h-6 w-[227px] text-[16px] font-semibold uppercase leading-[24px] tracking-[-0.02em] text-[#1A1B1C]">
+          TO START ANALYSIS
+        </p>
+
+        <div className="absolute inset-0 z-10">
+          <div className="mx-auto flex h-full w-full max-w-[430px] flex-col items-center" style={{ paddingTop: "210px" }}>
+          <button
+            type="button"
+            className="relative block"
+            style={{ width: "250px", height: "250px" }}
+            onClick={() => setShowCameraPermissionPanel(true)}
+          >
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_42s_linear_infinite] opacity-35" style={{ width: "200px", height: "200px" }}>
+                <Image src="/assets/figma/rombus-outer.svg" alt="" fill className="object-contain" />
+              </div>
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_30s_linear_infinite] [animation-direction:reverse] opacity-45" style={{ width: "184px", height: "184px" }}>
+                <Image src="/assets/figma/rombus-middle.svg" alt="" fill className="object-contain" />
+              </div>
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_22s_linear_infinite] opacity-55" style={{ width: "168px", height: "168px" }}>
+                <Image src="/assets/figma/rombus-inner.svg" alt="" fill className="object-contain" />
+              </div>
+            </div>
+            <div className="absolute -translate-x-1/2" style={{ left: "50%", top: "78px", width: "88px", height: "88px" }}>
+              <Image src="/assets/figma/camera.svg" alt="Allow A.I. to scan your face" fill className="object-contain" />
+            </div>
+            <p
+              className="absolute -translate-x-1/2 text-center text-[14px] font-normal leading-[24px] tracking-[0em] text-[#1A1B1C]"
+              style={{ left: "50%", top: "176px", width: "210px" }}
+            >
+              ALLOW A.I.
+              <br />
+              TO SCAN YOUR FACE
+            </p>
+          </button>
+
+          {selectedFileName ? (
+            <p className="mt-1 whitespace-nowrap text-center text-[11px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70">
+              SELECTED: {selectedFileName}
+            </p>
+          ) : null}
+          {isUploading ? (
+            <p className="mt-1 whitespace-nowrap text-center text-[11px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70">
+              UPLOADING{" "}
+              <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
+                <span ref={(node) => (uploadingDotRefs.current[0] = node)}>.</span>
+                <span ref={(node) => (uploadingDotRefs.current[1] = node)}>.</span>
+                <span ref={(node) => (uploadingDotRefs.current[2] = node)}>.</span>
+              </span>
+            </p>
+          ) : null}
+          {uploadStatus ? (
+            <p
+              ref={uploadStatusRef}
+              className="mt-1 whitespace-nowrap text-center text-[11px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70"
+              style={{ clipPath: "inset(0 100% 0 0)" }}
+            >
+              {uploadStatus}
+            </p>
+          ) : null}
+          {uploadError ? (
+            <p className="mt-1 whitespace-nowrap text-center text-[11px] uppercase tracking-[0.02em] text-[#B23A3A]">
+              {uploadError}
+            </p>
+          ) : null}
+
+          <button
+            type="button"
+            className={`relative mt-10 block transition-opacity duration-300 ${
+              showCameraPermissionPanel ? "cursor-not-allowed opacity-25" : "cursor-pointer opacity-100"
+            }`}
+            style={{ width: "250px", height: "250px" }}
+            onClick={showCameraPermissionPanel ? undefined : openGalleryPicker}
+          >
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_42s_linear_infinite] opacity-35" style={{ width: "200px", height: "200px" }}>
+                <Image src="/assets/figma/rombus-outer.svg" alt="" fill className="object-contain" />
+              </div>
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_30s_linear_infinite] [animation-direction:reverse] opacity-45" style={{ width: "184px", height: "184px" }}>
+                <Image src="/assets/figma/rombus-middle.svg" alt="" fill className="object-contain" />
+              </div>
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_22s_linear_infinite] opacity-55" style={{ width: "168px", height: "168px" }}>
+                <Image src="/assets/figma/rombus-inner.svg" alt="" fill className="object-contain" />
+              </div>
+            </div>
+            <div className="absolute -translate-x-1/2" style={{ left: "50%", top: "78px", width: "88px", height: "88px" }}>
+              <Image src="/assets/figma/gallery.svg" alt="Allow A.I. access gallery" fill className="object-contain" />
+            </div>
+            <p
+              className="absolute -translate-x-1/2 text-center text-[14px] font-normal leading-[24px] tracking-[0em] text-[#1A1B1C]"
+              style={{ left: "50%", top: "176px", width: "210px" }}
+            >
+              ALLOW A.I.
+              <br />
+              ACCESS GALLERY
+            </p>
+          </button>
+          </div>
+        </div>
+
+        {showCameraPermissionPanel ? (
+          <div
+            ref={cameraPermissionPanelRef}
+            className="absolute left-1/2 z-30 h-[136px] w-[352px] max-w-[90vw] -translate-x-1/2 bg-[#1A1B1C]"
+            style={{ top: "130px" }}
+          >
+            <p className="absolute left-[15px] top-[14px] h-6 w-[321px] max-w-[calc(100%-30px)] whitespace-nowrap text-[16px] font-semibold uppercase leading-[24px] tracking-[0em] text-[#FCFCFC]">
+              ALLOW A.I. TO ACCESS YOUR CAMERA
+            </p>
+            <div className="absolute left-0 top-[100px] h-px w-full bg-[#FCFCFC]" />
+            <div className="absolute left-1/2 top-[101px] inline-flex h-[35px] -translate-x-1/2 items-center gap-2">
+              <button
+                type="button"
+                className="inline-flex h-[35px] w-20 cursor-pointer items-center justify-center px-4 pb-[10px] pt-[9px] text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#FCFCFC]"
+                onClick={() => setShowCameraPermissionPanel(false)}
+              >
+                DENY
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-[35px] w-20 cursor-pointer items-center justify-center px-4 pb-[10px] pt-[9px] text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#FCFCFC]"
+                onClick={() => {
+                  setShowCameraPermissionPanel(false);
+                  router.push("/camera");
+                }}
+              >
+                ALLOW
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="absolute left-8 z-20" style={{ bottom: `${MOBILE_ACTION_BOTTOM_PX}px` }}>
+          <ButtonIconTextShrink
+            label="BACK"
+            direction="left"
+            frameWidthClass="w-[97px]"
+            textWidthClass="w-[37px]"
+            textClassName="opacity-70"
+            className="cursor-pointer"
+            expandOnHover={false}
+            expandMode="icon"
+            baseWidth={97}
+            expandedWidth={97}
+            baseHeight={44}
+            expandedHeight={44}
+            baseGap={16}
+            expandedGap={16}
+            baseIconSize={44}
+            expandedIconSize={44}
+            onClick={() => router.push("/start-analysis")}
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative h-[100dvh] w-full overflow-hidden bg-[#FCFCFC]">

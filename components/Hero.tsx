@@ -42,6 +42,10 @@ export default function Hero() {
   };
 
   useLayoutEffect(() => {
+    if (!window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+
     let mounted = true;
 
     const applyCenteredLayout = () => {
@@ -267,7 +271,75 @@ export default function Hero() {
 
   return (
     <section className="relative h-[100dvh] w-full overflow-hidden bg-[#FCFCFC]">
-      <div className="absolute left-1/2 top-1/2 h-[960px] w-[1920px] -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute left-0 top-0 z-20 w-full">
+        <Header />
+      </div>
+      <div className="relative h-full w-full pt-20 md:hidden">
+        <div className="mx-auto flex h-full w-full max-w-[430px] items-center justify-center px-4 pb-12">
+          <div className="relative h-[360px] w-[360px] max-w-[90vw]">
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rotate-45"
+              style={{ width: "300px", height: "300px", border: "1.4px solid rgba(188, 194, 200, 0.8)" }}
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 h-[245px] w-[245px] -translate-x-1/2 -translate-y-1/2 rotate-45"
+              style={{ width: "245px", height: "245px", border: "1.2px solid rgba(188, 194, 200, 0.65)" }}
+              aria-hidden="true"
+            />
+
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6">
+              <h1
+                className="text-center font-normal tracking-[-0.04em] text-[#1A1B1C]"
+                style={{
+                  width: "240px",
+                  fontSize: "50px",
+                  lineHeight: "42px",
+                  letterSpacing: "-0.06em",
+                  marginLeft: "-6px",
+                  paddingBottom: "12px",
+                }}
+              >
+                <span className="block">Sophisticated</span>
+                <span className="mt-3 block">skincare</span>
+              </h1>
+
+              <p
+                className="mt-8 text-center font-semibold tracking-[-0.01em] text-[#8E8E8E]"
+                style={{ width: "240px", fontSize: "12px", lineHeight: "30px", color: "#8E8E8E" }}
+              >
+                Skinstric developed an A.I. that creates a highly-personalized routine tailored to what your skin needs.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => router.push("/start-analysis")}
+                className="mt-7 inline-flex items-center gap-4 text-[12px] font-semibold uppercase leading-[16px] tracking-[-0.02em] text-[#1A1B1C]"
+                aria-label="Enter experience"
+              >
+                <span>ENTER</span>
+                <span className="relative inline-block h-[28px] w-[28px]">
+                  <svg className="h-full w-full" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 0.75L23.25 12L12 23.25L0.75 12L12 0.75Z" stroke="#1A1B1C" />
+                  </svg>
+                  <svg
+                    width="5.6"
+                    height="6.4"
+                    viewBox="0 0 9.43 10.89"
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-180"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path d="M9.43 0L0 5.445L9.43 10.89V0Z" fill="#1A1B1C" />
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute left-1/2 top-1/2 hidden h-[960px] w-[1920px] -translate-x-1/2 -translate-y-1/2 md:block">
         {/* Side guide rectangles */}
         <div
           ref={leftGuideRef}
@@ -289,8 +361,6 @@ export default function Hero() {
             className="h-full w-full"
           />
         </div>
-
-        <Header />
 
         {/* Center Headline */}
         <h1

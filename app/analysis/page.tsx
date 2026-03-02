@@ -51,13 +51,40 @@ const ARROW_KEY_TO_TILE: Partial<Record<string, AnalysisSection>> = {
 
 export default function AnalysisPage() {
   const router = useRouter();
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   const [activeTile, setActiveTile] = useState<AnalysisSection | null>(null);
   const clusterRef = useRef<HTMLDivElement>(null);
   const summaryButtonRef = useRef<HTMLDivElement>(null);
   const canOpenSummary = activeTile === "demographics";
+  const isMobile = viewportWidth !== null && viewportWidth < 768;
+  const clusterSize = isMobile ? 260 : 308;
+  const tileSize = clusterSize / 2;
+  const mobileRingScale = isMobile ? 0.82 : 1;
   const goToDemographicsSummary = useCallback(() => {
     router.push("/analysis/demographics");
   }, [router]);
+
+  useEffect(() => {
+    const getViewportWidth = () => {
+      const candidates = [
+        window.innerWidth,
+        document.documentElement.clientWidth,
+        window.visualViewport?.width ?? Number.POSITIVE_INFINITY,
+      ].filter((value) => Number.isFinite(value) && value > 0);
+
+      return Math.min(...candidates);
+    };
+
+    const syncViewport = () => setViewportWidth(getViewportWidth());
+    syncViewport();
+
+    window.addEventListener("resize", syncViewport);
+    window.visualViewport?.addEventListener("resize", syncViewport);
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+      window.visualViewport?.removeEventListener("resize", syncViewport);
+    };
+  }, []);
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -151,9 +178,10 @@ export default function AnalysisPage() {
 
       <div
         ref={clusterRef}
-        className={`analysis-cluster absolute left-1/2 top-1/2 h-[308px] w-[308px] -translate-x-1/2 -translate-y-1/2 ${
+        className={`analysis-cluster absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${
           activeTile ? "analysis-cluster--active" : ""
         }`}
+        style={{ width: `${clusterSize}px`, height: `${clusterSize}px` }}
       >
         {guideRings.map((ring) => (
           <div
@@ -161,7 +189,7 @@ export default function AnalysisPage() {
             className="rhombus-ring pointer-events-none absolute left-1/2 top-1/2 h-[var(--ring-size)] w-[var(--ring-size)]"
             style={{
               // CSS variables let each ring keep unique timing/scale while sharing one smooth interaction.
-              "--ring-size": `${ring.size}px`,
+              "--ring-size": `${ring.size * mobileRingScale}px`,
               "--ring-opacity": ring.opacity,
               "--ring-hidden-scale": ring.hiddenScale,
               "--ring-show-scale": ring.showScale,
@@ -173,7 +201,10 @@ export default function AnalysisPage() {
           </div>
         ))}
 
-        <div className="absolute left-1/2 top-1/2 grid h-[308px] w-[308px] -translate-x-1/2 -translate-y-1/2 rotate-45 grid-cols-2 gap-[2px] bg-[#FCFCFC]">
+        <div
+          className="absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 rotate-45 grid-cols-2 gap-[2px] bg-[#FCFCFC]"
+          style={{ width: `${clusterSize}px`, height: `${clusterSize}px` }}
+        >
           {analysisTiles.map((tile) => {
             const isActive = activeTile === tile.id;
             return (
@@ -186,11 +217,12 @@ export default function AnalysisPage() {
                   }
                   setActiveTile(tile.id);
                 }}
-                className={`relative h-[154px] w-[154px] border border-[#FCFCFC] outline-none transition-colors duration-200 focus:outline-none focus-visible:outline-none ${
+                className={`relative border border-[#FCFCFC] outline-none transition-colors duration-200 focus:outline-none focus-visible:outline-none ${
                   tile.disabled ? "cursor-not-allowed" : "cursor-pointer"
                 } ${
                   isActive ? "bg-[#E1E1E2]" : "bg-[#F3F3F4]"
                 }`}
+                style={{ width: `${tileSize}px`, height: `${tileSize}px` }}
                 aria-disabled={tile.disabled ? true : undefined}
                 title={tile.disabled ? "Disabled for this demo" : undefined}
               >
@@ -203,7 +235,7 @@ export default function AnalysisPage() {
         </div>
       </div>
 
-      <div className="absolute bottom-9 left-8" data-keep-analysis-selection="true">
+      <div className="absolute bottom-9 left-8 right-8 flex items-center justify-between" data-keep-analysis-selection="true">
         <ButtonIconTextShrink
           label="BACK"
           direction="left"
@@ -223,33 +255,28 @@ export default function AnalysisPage() {
           expandedIconSize={54}
           onClick={() => router.push("/scan-options")}
         />
-      </div>
 
-      <div
-        ref={summaryButtonRef}
-        className="absolute bottom-9 right-8"
-        data-keep-analysis-selection="true"
-        style={{ opacity: 0.4 }}
-      >
-        <ButtonIconTextShrink
-          label="GET SUMMARY"
-          direction="right"
-          frameWidthClass="w-[155px]"
-          textWidthClass="w-[95px]"
-          className={canOpenSummary ? "cursor-pointer" : "cursor-not-allowed"}
-          textClassName={canOpenSummary ? "" : "opacity-70"}
-          expandOnHover
-          expandMode="icon"
-          baseWidth={155}
-          expandedWidth={155}
-          baseHeight={44}
-          expandedHeight={44}
-          baseGap={16}
-          expandedGap={16}
-          baseIconSize={44}
-          expandedIconSize={58}
-          onClick={canOpenSummary ? goToDemographicsSummary : undefined}
-        />
+        <div ref={summaryButtonRef} style={{ opacity: 0.4 }}>
+          <ButtonIconTextShrink
+            label="GET SUMMARY"
+            direction="right"
+            frameWidthClass="w-[155px]"
+            textWidthClass="w-[95px]"
+            className={canOpenSummary ? "cursor-pointer" : "cursor-not-allowed"}
+            textClassName={canOpenSummary ? "" : "opacity-70"}
+            expandOnHover
+            expandMode="icon"
+            baseWidth={155}
+            expandedWidth={155}
+            baseHeight={44}
+            expandedHeight={44}
+            baseGap={16}
+            expandedGap={16}
+            baseIconSize={44}
+            expandedIconSize={58}
+            onClick={canOpenSummary ? goToDemographicsSummary : undefined}
+          />
+        </div>
       </div>
     </section>
   );
