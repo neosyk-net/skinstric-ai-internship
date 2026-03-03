@@ -254,11 +254,35 @@ const enrichSexRankedItems = (items: RankedItem[]) => {
 
 export default function DemographicsSummaryPage() {
   const router = useRouter();
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   const [selectedBox, setSelectedBox] = useState<SelectedBox>("race");
   const [selectedRightRowIndex, setSelectedRightRowIndex] = useState(0);
   const [originalValues, setOriginalValues] = useState<DominantValues>(FALLBACK_VALUES);
   const [confirmedValues, setConfirmedValues] = useState<DominantValues>(FALLBACK_VALUES);
   const [rankedByCategory, setRankedByCategory] = useState<RankedByCategory>(FALLBACK_RANKED);
+  const isMobile = viewportWidth !== null && viewportWidth < 992;
+
+  const getViewportWidth = () => {
+    const candidates = [
+      window.innerWidth,
+      document.documentElement.clientWidth,
+      window.visualViewport?.width ?? Number.POSITIVE_INFINITY,
+    ].filter((value) => Number.isFinite(value) && value > 0);
+
+    return Math.min(...candidates);
+  };
+
+  useEffect(() => {
+    const syncViewport = () => setViewportWidth(getViewportWidth());
+    syncViewport();
+
+    window.addEventListener("resize", syncViewport);
+    window.visualViewport?.addEventListener("resize", syncViewport);
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+      window.visualViewport?.removeEventListener("resize", syncViewport);
+    };
+  }, []);
 
   useEffect(() => {
     const raw = localStorage.getItem("skinstric_phase_two_response");
@@ -313,17 +337,268 @@ export default function DemographicsSummaryPage() {
   const activePercentNumber = `${activePercent}`;
   const activeRingOffset = RING_CIRCUMFERENCE * (1 - activePercent / 100);
 
+  if (viewportWidth === null) {
+    return (
+      <section className="relative h-[100dvh] w-full overflow-hidden bg-[#FCFCFC]">
+        <Header showEnterCodeButton={false} locationLabel="ANALYSIS" />
+      </section>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <section className="relative min-h-[100dvh] w-full overflow-y-auto bg-[#FCFCFC]">
+        <Header showEnterCodeButton={false} locationLabel="ANALYSIS" />
+
+        <div className="mx-auto w-full" style={{ paddingTop: "82px", paddingBottom: "40px" }}>
+          <p
+            className="text-[16px] font-semibold uppercase leading-[24px] tracking-[-0.02em] text-[#1A1B1C]"
+            style={{ width: "calc(100% - 32px)", marginLeft: "16px", marginRight: "16px" }}
+          >
+            A.I ANALYSIS
+          </p>
+          <p
+            className="text-left font-normal uppercase text-[#1A1B1C]"
+            style={{
+              width: "calc(100% - 32px)",
+              marginLeft: "16px",
+              marginRight: "16px",
+              marginTop: "10px",
+              fontSize: "clamp(44px, 12vw, 52px)",
+              lineHeight: "1",
+              letterSpacing: "-0.045em",
+            }}
+          >
+            DEMOGRAPHICS
+          </p>
+          <p
+            className="text-[14px] font-normal uppercase leading-[24px] text-[#1A1B1C]"
+            style={{ width: "calc(100% - 32px)", marginLeft: "16px", marginRight: "16px", marginTop: "10px" }}
+          >
+            PREDICTED RACE &amp; AGE
+          </p>
+
+          <div style={{ width: "calc(100% - 32px)", marginLeft: "16px", marginRight: "16px", marginTop: "24px" }}>
+            <div style={{ display: "grid", rowGap: "12px" }}>
+              <button
+                type="button"
+                className={`w-full border-t-2 px-3 py-2 text-left transition-colors duration-300 ${
+                  selectedBox === "race" ? "border-[#1A1B1C] bg-[#1A1B1C] text-[#FCFCFC]" : "border-[#1A1B1C] bg-[#F3F3F4] text-[#1A1B1C]"
+                }`}
+                style={{ paddingLeft: "14px" }}
+                onClick={() => {
+                  setSelectedBox("race");
+                  setSelectedRightRowIndex(getIndexForLabel(rankedByCategory.race, confirmedValues.race));
+                }}
+              >
+                <p className="text-[16px] font-semibold uppercase leading-[24px]">{confirmedValues.race}</p>
+                <p className="text-[16px] font-semibold uppercase leading-[24px]">RACE</p>
+              </button>
+              <button
+                type="button"
+                className={`w-full border-t-2 px-3 py-2 text-left transition-colors duration-300 ${
+                  selectedBox === "age" ? "border-[#1A1B1C] bg-[#1A1B1C] text-[#FCFCFC]" : "border-[#1A1B1C] bg-[#F3F3F4] text-[#1A1B1C]"
+                }`}
+                style={{ paddingLeft: "14px" }}
+                onClick={() => {
+                  setSelectedBox("age");
+                  setSelectedRightRowIndex(getIndexForLabel(rankedByCategory.age, confirmedValues.age));
+                }}
+              >
+                <p className="text-[16px] font-semibold uppercase leading-[24px]">{confirmedValues.age}</p>
+                <p className="text-[16px] font-semibold uppercase leading-[24px]">AGE</p>
+              </button>
+              <button
+                type="button"
+                className={`w-full border-t-2 px-3 py-2 text-left transition-colors duration-300 ${
+                  selectedBox === "sex" ? "border-[#1A1B1C] bg-[#1A1B1C] text-[#FCFCFC]" : "border-[#1A1B1C] bg-[#F3F3F4] text-[#1A1B1C]"
+                }`}
+                style={{ paddingLeft: "14px" }}
+                onClick={() => {
+                  setSelectedBox("sex");
+                  setSelectedRightRowIndex(getIndexForLabel(rankedByCategory.sex, confirmedValues.sex));
+                }}
+              >
+                <p className="text-[16px] font-semibold uppercase leading-[24px]">{confirmedValues.sex}</p>
+                <p className="text-[16px] font-semibold uppercase leading-[24px]">SEX</p>
+              </button>
+            </div>
+
+            <div
+              className="flex aspect-square flex-col items-center border-t-2 border-[#1A1B1C] bg-[#F3F3F4] px-6"
+              style={{ marginTop: "28px", paddingTop: "32px", paddingBottom: "28px" }}
+            >
+              <div className="relative" style={{ width: "260px", height: "260px" }}>
+                <svg
+                  className="block"
+                  style={{ width: "260px", height: "260px" }}
+                  viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx={RING_SIZE / 2}
+                    cy={RING_SIZE / 2}
+                    r={RING_RADIUS}
+                    fill="none"
+                    stroke={RING_TRACK_COLOR}
+                    strokeWidth={RING_STROKE_WIDTH}
+                  />
+                  <circle
+                    cx={RING_SIZE / 2}
+                    cy={RING_SIZE / 2}
+                    r={RING_RADIUS}
+                    fill="none"
+                    stroke={RING_FILL_COLOR}
+                    strokeWidth={RING_STROKE_WIDTH}
+                    strokeDasharray={RING_CIRCUMFERENCE}
+                    strokeDashoffset={activeRingOffset}
+                    strokeLinecap="round"
+                    transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+                    style={{ transition: "stroke-dashoffset 520ms cubic-bezier(0.22, 1, 0.36, 1)" }}
+                  />
+                </svg>
+                <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[68px] font-semibold leading-[56px] tracking-[-0.05em] text-[#1A1B1C]">
+                  {activePercentNumber}%
+                </p>
+              </div>
+              <p
+                className="text-center text-[16px] font-normal leading-[24px] tracking-[-0.02em] text-[#A0A4AB]"
+                style={{ marginTop: "30px" }}
+              >
+                If A.I. estimate is wrong, select the correct one.
+              </p>
+            </div>
+
+            <div className="border-t-2 border-[#1A1B1C] bg-[#F3F3F4]" style={{ marginTop: "28px" }}>
+              <div
+                className="flex items-center justify-between gap-3 px-4 text-[16px] font-bold uppercase leading-[24px] tracking-[-0.02em] text-[#1A1B1C] opacity-80"
+                style={{ paddingTop: "10px", paddingBottom: "10px" }}
+              >
+                <p className="whitespace-nowrap">{selectedPanelLabel}</p>
+                <p className="ml-auto whitespace-nowrap text-right">A.I CONFIDENCE</p>
+              </div>
+              {activeRows.map((row, index) => {
+                const isRowSelected = index === selectedRightRowIndex;
+                const rowLabel = selectedBox === "age" ? row.label : toTitleCase(row.label);
+                return (
+                  <button
+                    key={`${selectedBox}-${row.label}-${index}`}
+                    type="button"
+                    className={`flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors duration-300 ${
+                      isRowSelected ? "bg-[#1A1B1C] text-[#FCFCFC]" : "bg-[#F3F3F4] text-[#1A1B1C]"
+                    }`}
+                    style={{ paddingTop: "14px", paddingBottom: "14px", marginBottom: "8px" }}
+                    onClick={() => setSelectedRightRowIndex(index)}
+                  >
+                    <span className="inline-flex min-w-0 items-center">
+                      <span className="relative h-[10px] w-[10px] rotate-45 border border-current" aria-hidden="true">
+                        {isRowSelected ? (
+                          <span className="absolute left-1/2 top-1/2 h-[6px] w-[6px] -translate-x-1/2 -translate-y-1/2 bg-[#FCFCFC]" />
+                        ) : null}
+                      </span>
+                      <span
+                        className="font-normal tracking-[-0.02em]"
+                        style={{ marginLeft: "14px", fontSize: "18px", lineHeight: "26px" }}
+                      >
+                        {rowLabel}
+                      </span>
+                    </span>
+                    <span
+                      className="ml-3 shrink-0 text-right font-normal tracking-[-0.02em]"
+                      style={{ fontSize: "18px", lineHeight: "26px" }}
+                    >
+                      {formatPercent(row.score)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div
+            className="mt-6 flex items-center justify-between"
+            style={{ width: "calc(100% - 32px)", marginLeft: "16px", marginRight: "16px", marginBottom: "4px" }}
+          >
+            <ButtonIconTextShrink
+              label="BACK"
+              direction="left"
+              frameWidthClass="w-[97px]"
+              textWidthClass="w-[37px]"
+              textClassName="opacity-70"
+              className="cursor-pointer"
+              expandOnHover={false}
+              expandMode="icon"
+              baseWidth={97}
+              expandedWidth={97}
+              baseHeight={44}
+              expandedHeight={44}
+              baseGap={16}
+              expandedGap={16}
+              baseIconSize={44}
+              expandedIconSize={54}
+              onClick={() => router.push("/analysis")}
+            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className={`inline-flex h-[35px] w-[73px] items-center justify-center border px-4 pb-[10px] pt-[9px] text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] transition-colors duration-200 ${
+                  hasPendingResetForSelectedBox
+                    ? "border-[#1A1B1C] bg-[#1A1B1C] text-[#FCFCFC]"
+                    : "border-[#1A1B1C] bg-transparent text-[#1A1B1C]"
+                }`}
+                onClick={() => {
+                  setConfirmedValues((previous) => ({
+                    ...previous,
+                    [selectedBox]: originalValues[selectedBox],
+                  }));
+                  setSelectedRightRowIndex(getIndexForLabel(rankedByCategory[selectedBox], originalValues[selectedBox]));
+                }}
+              >
+                RESET
+              </button>
+              <button
+                type="button"
+                className={`inline-flex h-[35px] w-[95px] items-center justify-center border px-4 pb-[10px] pt-[9px] text-[14px] font-semibold uppercase leading-[16px] tracking-[-0.02em] transition-colors duration-200 ${
+                  hasPendingConfirmChange
+                    ? "border-[#1A1B1C] bg-[#1A1B1C] text-[#FCFCFC]"
+                    : "border-[#1A1B1C] bg-transparent text-[#1A1B1C]"
+                }`}
+                onClick={() => {
+                  const nextDefault = selectedRow;
+                  if (!nextDefault) return;
+                  setConfirmedValues((previous) => ({
+                    ...previous,
+                    [selectedBox]: nextDefault.label,
+                  }));
+                }}
+              >
+                CONFIRM
+              </button>
+            </div>
+          </div>
+          <div style={{ height: "4px" }} aria-hidden="true" />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative h-[100dvh] w-full overflow-hidden bg-[#FCFCFC]">
       <Header showEnterCodeButton={false} locationLabel="ANALYSIS" />
 
       <div className="absolute left-8 top-[86px] text-[#1A1B1C]">
-        <p className="h-6 w-[227px] text-[16px] font-semibold uppercase leading-[24px] tracking-[-0.02em]">
+        <p className="h-auto w-[227px] pb-3 text-[16px] font-semibold uppercase leading-[24px] tracking-[-0.02em] md:h-6 md:pb-0">
           A.I ANALYSIS
         </p>
       </div>
 
-      <p className="absolute left-[29px] top-[115px] h-16 w-[505px] text-[72px] font-normal uppercase leading-[64px] tracking-[-0.06em] text-[#1A1B1C]">
+      <p
+        className="absolute left-8 top-[115px] w-[342px] max-w-[calc(100%-64px)] text-left font-normal uppercase tracking-tight text-[#1A1B1C] md:hidden"
+        style={{ fontSize: "clamp(44px, 12vw, 52px)", lineHeight: "1", letterSpacing: "-0.045em" }}
+      >
+        DEMOGRAPHICS
+      </p>
+      <p className="absolute left-[29px] top-[115px] hidden h-16 w-[505px] text-left text-[72px] font-normal uppercase leading-[64px] tracking-[-0.06em] text-[#1A1B1C] md:block">
         DEMOGRAPHICS
       </p>
       <p className="absolute left-[32px] top-[190px] h-6 w-[227px] text-[14px] font-normal uppercase leading-[24px] tracking-[0em] text-[#1A1B1C]">

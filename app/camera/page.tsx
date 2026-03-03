@@ -196,14 +196,14 @@ export default function CameraPage() {
   };
 
   useEffect(() => {
-    if (!proceedButtonRef.current || !hasApprovedPhoto || capturedPhotoDataUrl) return;
+    if (!proceedButtonRef.current || !hasApprovedPhoto || isPreviewMode) return;
 
     gsap.fromTo(
       proceedButtonRef.current,
       { x: 56, autoAlpha: 0, scale: 0.98 },
       { x: 0, autoAlpha: 1, scale: 1, duration: 0.5, ease: "power3.out", overwrite: "auto" },
     );
-  }, [hasApprovedPhoto, capturedPhotoDataUrl]);
+  }, [hasApprovedPhoto, isPreviewMode]);
 
   useEffect(() => {
     if (!isCameraInitializing) return;
