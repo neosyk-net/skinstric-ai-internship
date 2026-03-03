@@ -369,9 +369,9 @@ export default function StartAnalysisPage() {
               >
                 SUBMITTING{" "}
                 <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
-                  <span ref={(node) => (submittingDotRefs.current[0] = node)}>.</span>
-                  <span ref={(node) => (submittingDotRefs.current[1] = node)}>.</span>
-                  <span ref={(node) => (submittingDotRefs.current[2] = node)}>.</span>
+                  <span ref={(node) => { submittingDotRefs.current[0] = node; }}>.</span>
+                  <span ref={(node) => { submittingDotRefs.current[1] = node; }}>.</span>
+                  <span ref={(node) => { submittingDotRefs.current[2] = node; }}>.</span>
                 </span>
               </p>
             ) : null}
@@ -537,9 +537,9 @@ export default function StartAnalysisPage() {
         <p className="absolute left-1/2 top-[530px] -translate-x-1/2 text-[12px] uppercase tracking-[0.02em] text-[#1A1B1C] opacity-70">
           SUBMITTING{" "}
           <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
-            <span ref={(node) => (submittingDotRefs.current[0] = node)}>.</span>
-            <span ref={(node) => (submittingDotRefs.current[1] = node)}>.</span>
-            <span ref={(node) => (submittingDotRefs.current[2] = node)}>.</span>
+            <span ref={(node) => { submittingDotRefs.current[0] = node; }}>.</span>
+            <span ref={(node) => { submittingDotRefs.current[1] = node; }}>.</span>
+            <span ref={(node) => { submittingDotRefs.current[2] = node; }}>.</span>
           </span>
         </p>
       ) : null}
@@ -591,3 +591,4 @@ export default function StartAnalysisPage() {
     </section>
   );
 }
+

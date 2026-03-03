@@ -424,17 +424,17 @@ export default function CameraPage() {
           >
             SETTING UP CAMERA{" "}
             <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
-              <span ref={(node) => (setupDotRefs.current[0] = node)}>.</span>
-              <span ref={(node) => (setupDotRefs.current[1] = node)}>.</span>
-              <span ref={(node) => (setupDotRefs.current[2] = node)}>.</span>
+              <span ref={(node) => { setupDotRefs.current[0] = node; }}>.</span>
+              <span ref={(node) => { setupDotRefs.current[1] = node; }}>.</span>
+              <span ref={(node) => { setupDotRefs.current[2] = node; }}>.</span>
             </span>
           </p>
           <p className="absolute left-[846px] top-[514px] hidden h-6 w-[227px] text-center text-[16px] font-semibold uppercase leading-[24px] tracking-[-0.02em] text-[#1A1B1C] md:block">
             SETTING UP CAMERA{" "}
             <span aria-hidden="true" className="inline-flex w-[14px] justify-between">
-              <span ref={(node) => (setupDotRefs.current[0] = node)}>.</span>
-              <span ref={(node) => (setupDotRefs.current[1] = node)}>.</span>
-              <span ref={(node) => (setupDotRefs.current[2] = node)}>.</span>
+              <span ref={(node) => { setupDotRefs.current[0] = node; }}>.</span>
+              <span ref={(node) => { setupDotRefs.current[1] = node; }}>.</span>
+              <span ref={(node) => { setupDotRefs.current[2] = node; }}>.</span>
             </span>
           </p>
         </div>
@@ -442,3 +442,4 @@ export default function CameraPage() {
     </section>
   );
 }
+

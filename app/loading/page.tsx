@@ -78,11 +78,12 @@ export default function LoadingPage() {
       <p className="absolute left-1/2 top-1/2 h-6 w-[227px] -translate-x-1/2 -translate-y-1/2 text-center text-[16px] font-semibold uppercase leading-[24px] tracking-[-0.02em] text-[#1A1B1C]">
         PREPARING YOUR ANALYSIS{" "}
         <span aria-hidden="true" className="inline-flex w-[20px] justify-between">
-          <span ref={(node) => (dotRefs.current[0] = node)}>.</span>
-          <span ref={(node) => (dotRefs.current[1] = node)}>.</span>
-          <span ref={(node) => (dotRefs.current[2] = node)}>.</span>
+          <span ref={(node) => { dotRefs.current[0] = node; }}>.</span>
+          <span ref={(node) => { dotRefs.current[1] = node; }}>.</span>
+          <span ref={(node) => { dotRefs.current[2] = node; }}>.</span>
         </span>
       </p>
     </section>
   );
 }
+
